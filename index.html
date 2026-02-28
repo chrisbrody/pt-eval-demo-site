@@ -1308,18 +1308,27 @@
         var clinic = document.getElementById("cta-clinic").value.trim();
         var patients = ctaPatients.value;
 
-        // Build pre-filled Google Form URL and open in new tab
-        var baseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSd9BVnn8Ly38bEHd6-Y6lBfV1yaRK00bo2uNQX2GiAQZKdajA/viewform";
-        var params = new URLSearchParams();
-        params.append("entry.1633920210", name);
-        params.append("entry.227649005", email);
-        if (clinic) params.append("entry.790080973", clinic);
-        if (patients) params.append("entry.1770822543", patients);
+        var btnSubmit = document.getElementById("btn-cta");
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Submitting...";
 
-        window.open(baseUrl + "?" + params.toString(), "_blank");
-
-        ctaForm.style.display = "none";
-        ctaSuccess.classList.add("visible");
+        fetch("https://hook.us1.make.com/rsei44fc2qw4w1kgikcc6o47gmt8hyvk", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name,
+                email: email,
+                clinic: clinic || "",
+                patients_per_day: patients || ""
+            })
+        }).then(function() {
+            ctaForm.style.display = "none";
+            ctaSuccess.classList.add("visible");
+        }).catch(function() {
+            btnSubmit.disabled = false;
+            btnSubmit.textContent = "Request Access";
+            alert("Something went wrong. Please try again.");
+        });
     });
 
 })();
