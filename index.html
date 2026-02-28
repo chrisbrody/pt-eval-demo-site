@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT Intake — Voice to SOAP Notes for Physical Therapists</title>
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blue: #2b6cb0;
+            --blue-dark: #2c5282;
+            --blue-light: #ebf8ff;
+            --green: #38a169;
+            --green-dark: #2f855a;
+            --green-light: #f0fff4;
+            --red: #e53e3e;
+            --pink: #d53f8c;
+            --gray-50: #f7fafc;
+            --gray-100: #f5f7fa;
+            --gray-200: #edf2f7;
+            --gray-300: #e2e8f0;
+            --gray-400: #cbd5e0;
+            --gray-500: #a0aec0;
+            --gray-600: #718096;
+            --gray-700: #4a5568;
+            --gray-800: #2d3748;
+            --gray-900: #1a202c;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--gray-800);
+            line-height: 1.6;
+            background: white;
+        }
+
+        /* ── Navigation ─────────────────────────────── */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--gray-300);
+            z-index: 100;
+            padding: 0 24px;
+        }
+
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--gray-700);
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--blue);
+        }
+
+        .nav-cta {
+            background: var(--blue);
+            color: white !important;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-weight: 600 !important;
+            transition: background 0.2s !important;
+        }
+
+        .nav-cta:hover {
+            background: var(--blue-dark) !important;
+        }
+
+        /* ── Sections (shared) ──────────────────────── */
+        section {
+            padding: 80px 24px;
+        }
+
+        .section-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            text-transform: uppercase;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--blue);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .section-subtitle {
+            font-size: 17px;
+            color: var(--gray-600);
+            max-width: 640px;
+        }
+
+        /* ── Hero ───────────────────────────────────── */
+        .hero {
+            padding-top: 140px;
+            padding-bottom: 80px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--gray-50) 0%, white 100%);
+        }
+
+        .hero h1 {
+            font-size: 44px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--gray-900);
+            margin-bottom: 20px;
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero h1 span {
+            color: var(--blue);
+        }
+
+        .hero p {
+            font-size: 19px;
+            color: var(--gray-600);
+            max-width: 560px;
+            margin: 0 auto 32px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-dark);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--blue);
+            border: 2px solid var(--blue);
+        }
+
+        .btn-outline:hover {
+            background: var(--blue-light);
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-top: 36px;
+            flex-wrap: wrap;
+        }
+
+        .hero-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        .hero-badge svg {
+            flex-shrink: 0;
+        }
+
+        /* ── Problem ────────────────────────────────── */
+        .problem {
+            background: var(--gray-50);
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .problem-card {
+            background: white;
+            border-radius: 10px;
+            padding: 28px;
+            border: 1px solid var(--gray-300);
+        }
+
+        .problem-card .stat {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--red);
+            margin-bottom: 8px;
+        }
+
+        .problem-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--gray-800);
+        }
+
+        .problem-card p {
+            font-size: 14px;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+
+        /* ── How It Works ───────────────────────────── */
+        .how-it-works {
+            text-align: center;
+        }
+
+        .steps-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .step-card {
+            position: relative;
+        }
+
+        .step-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--blue-light);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .step-icon svg {
+            width: 28px;
+            height: 28px;
+            color: var(--blue);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(24px);
+            width: 24px;
+            height: 24px;
+            background: var(--blue);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .step-card p {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .step-arrow {
+            display: none;
+        }
+
+        /* ── Interactive Demo ───────────────────────── */
+        .demo-section {
+            background: var(--gray-50);
+        }
+
+        .demo-section .section-title,
+        .demo-section .section-subtitle {
+            text-align: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .demo-context {
+            text-align: center;
+            background: var(--blue-light);
+            border: 1px solid #bee3f8;
+            border-radius: 8px;
+            padding: 16px 24px;
+            margin: 24px auto 32px;
+            max-width: 720px;
+            font-size: 14px;
+            color: var(--blue-dark);
+        }
+
+        .demo-controls {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .btn-demo {
+            background: var(--green);
+            color: white;
+            font-size: 16px;
+            padding: 14px 36px;
+        }
+
+        .btn-demo:hover:not(:disabled) {
+            background: var(--green-dark);
+        }
+
+        .btn-demo:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-demo.running {
+            background: var(--gray-600);
+        }
+
+        .demo-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 0;
+        }
+
+        .demo-panel {
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--gray-300);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .demo-panel-header {
+            padding: 12px 16px;
+            background: var(--gray-200);
+            border-bottom: 1px solid var(--gray-300);
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--gray-700);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .demo-panel-body {
+            padding: 16px;
+            min-height: 300px;
+            max-height: 420px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .demo-panel-body.transcript {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--gray-700);
+        }
+
+        .demo-panel-body.soap {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--gray-800);
+            white-space: pre-wrap;
+        }
+
+        .transcript-placeholder {
+            color: var(--gray-500);
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .diarized-line {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .speaker-label {
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        .speaker-label.pt {
+            color: var(--blue);
+        }
+
+        .speaker-label.patient {
+            color: var(--pink);
+        }
+
+        .recording-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--red);
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .timer-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gray-600);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-saved-callout {
+            display: none;
+            text-align: center;
+            margin-top: 24px;
+            padding: 20px;
+            background: var(--green-light);
+            border: 1px solid #c6f6d5;
+            border-radius: 10px;
+        }
+
+        .time-saved-callout.visible {
+            display: block;
+        }
+
+        .time-saved-callout .big-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--green);
+        }
+
+        .time-saved-callout p {
+            font-size: 14px;
+            color: var(--gray-700);
+            margin-top: 4px;
+        }
+
+        .btn-copy-soap {
+            background: var(--blue);
+            color: white;
+            font-size: 12px;
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-copy-soap:hover {
+            background: var(--blue-dark);
+        }
+
+        .btn-copy-soap:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .copy-feedback {
+            font-size: 12px;
+            color: var(--green);
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            margin-right: 6px;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        /* ── Features ───────────────────────────────── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            display: flex;
+            gap: 16px;
+            padding: 24px;
+            background: var(--gray-50);
+            border-radius: 10px;
+            border: 1px solid var(--gray-300);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--blue-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feature-icon svg {
+            width: 22px;
+            height: 22px;
+            color: var(--blue);
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--gray-600);
+            line-height: 1.5;
+        }
+
+        /* ── CTA ────────────────────────────────────── */
+        .cta-section {
+            text-align: center;
+            background: var(--blue);
+            color: white;
+        }
+
+        .cta-section .section-title {
+            color: white;
+        }
+
+        .cta-section p {
+            color: rgba(255,255,255,0.85);
+            font-size: 17px;
+            max-width: 520px;
+            margin: 0 auto 28px;
+        }
+
+        .btn-cta {
+            background: white;
+            color: var(--blue);
+            font-size: 16px;
+            padding: 14px 36px;
+        }
+
+        .btn-cta:hover {
+            background: var(--gray-100);
+        }
+
+        /* ── Footer ─────────────────────────────────── */
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            font-size: 13px;
+            color: var(--gray-500);
+            border-top: 1px solid var(--gray-300);
+        }
+
+        /* ── Responsive ─────────────────────────────── */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 30px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .problem-grid,
+            .steps-row {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-panels {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            section {
+                padding: 48px 16px;
+            }
+
+            .hero {
+                padding-top: 100px;
+                padding-bottom: 48px;
+            }
+
+            .section-title {
+                font-size: 26px;
+            }
+
+            .demo-panel-body {
+                min-height: 200px;
+                max-height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── Nav ─────────────────────────────────────────── -->
+<nav>
+    <div class="nav-inner">
+        <a href="#" class="nav-logo">PT Intake</a>
+        <ul class="nav-links">
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#demo">Demo</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#cta" class="nav-cta">Get Early Access</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────── -->
+<section class="hero">
+    <div class="section-inner">
+        <h1>Turn Patient Interviews into <span>SOAP Notes</span> in Minutes</h1>
+        <p>AI-powered voice transcription that runs entirely on your device. HIPAA compliant by design — no data ever leaves your machine.</p>
+        <div class="hero-buttons">
+            <a href="#demo" class="btn btn-primary">See the Demo</a>
+            <a href="#cta" class="btn btn-outline">Get Early Access</a>
+        </div>
+        <div class="hero-badges">
+            <div class="hero-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                HIPAA Compliant
+            </div>
+            <div class="hero-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                100% Local Processing
+            </div>
+            <div class="hero-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                Speaker Diarization
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Problem ─────────────────────────────────────── -->
+<section class="problem">
+    <div class="section-inner">
+        <div class="section-label">The Problem</div>
+        <div class="section-title">Documentation Steals Time from Patient Care</div>
+        <div class="section-subtitle">Physical therapists spend too much of their day on paperwork instead of treating patients.</div>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="stat">15-30 min</div>
+                <h3>Per Patient Note</h3>
+                <p>Manual documentation after each session adds up to hours of unpaid work every day.</p>
+            </div>
+            <div class="problem-card">
+                <div class="stat">62%</div>
+                <h3>Report Burnout</h3>
+                <p>Over half of PTs cite documentation burden as a primary cause of professional burnout.</p>
+            </div>
+            <div class="problem-card">
+                <div class="stat">$0</div>
+                <h3>Reimbursed</h3>
+                <p>Time spent on notes is rarely billable. PTs lose potential revenue on every session.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── How It Works ────────────────────────────────── -->
+<section class="how-it-works" id="how-it-works">
+    <div class="section-inner">
+        <div class="section-label">How It Works</div>
+        <div class="section-title">Three Steps to a Complete SOAP Note</div>
+        <div class="section-subtitle" style="margin: 0 auto;">Record your session, and PT Intake handles the rest — automatically.</div>
+        <div class="steps-row">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                </div>
+                <h3>Record the Session</h3>
+                <p>Hit record during the patient interview. Audio is captured locally with real-time transcription.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                </div>
+                <h3>Auto-Transcribe</h3>
+                <p>Speech is converted to text with speaker labels — PT and Patient are identified automatically.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </div>
+                <h3>SOAP Note Generated</h3>
+                <p>Keywords are matched to Subjective, Objective, Assessment, and Plan sections instantly.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── Interactive Demo ────────────────────────────── -->
+<section class="demo-section" id="demo">
+    <div class="section-inner">
+        <div class="section-label">Interactive Demo</div>
+        <div class="section-title">See It In Action</div>
+        <div class="section-subtitle">Watch a simulated PT interview get transcribed and converted to a SOAP note in real time.</div>
+
+        <div class="demo-context">
+            <strong>Scenario:</strong> A patient presents with left wrist pain from gym activity. The PT conducts an interview, performs an exam, and develops a treatment plan.
+        </div>
+
+        <div class="demo-controls">
+            <button class="btn btn-demo" id="btn-start-demo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 6px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Start Demo
+            </button>
+        </div>
+
+        <div class="demo-panels">
+            <div class="demo-panel">
+                <div class="demo-panel-header">
+                    <span id="transcript-header">Live Transcript</span>
+                    <span class="timer-badge" id="demo-timer" style="display:none;">
+                        <span class="recording-dot"></span>
+                        <span id="timer-value">00:00</span>
+                    </span>
+                </div>
+                <div class="demo-panel-body transcript" id="transcript-panel">
+                    <div class="transcript-placeholder">Click "Start Demo" to begin the simulation...</div>
+                </div>
+            </div>
+            <div class="demo-panel">
+                <div class="demo-panel-header">
+                    <span>SOAP Note</span>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span class="copy-feedback" id="copy-feedback">Copied!</span>
+                        <button class="btn-copy-soap" id="btn-copy-soap" disabled>Copy</button>
+                    </div>
+                </div>
+                <div class="demo-panel-body soap" id="soap-panel">
+                    <div class="transcript-placeholder">SOAP note will generate after the interview...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="time-saved-callout" id="time-saved">
+            <div class="big-number" id="time-saved-seconds"></div>
+            <p>SOAP note generated automatically — a task that typically takes PTs 15-30 minutes by hand.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ── Features ────────────────────────────────────── -->
+<section id="features">
+    <div class="section-inner">
+        <div class="section-label">Features</div>
+        <div class="section-title">Built for Physical Therapists</div>
+        <div class="section-subtitle">Every feature designed around the real workflow of a PT clinic.</div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                    <h3>HIPAA Compliant</h3>
+                    <p>All audio and text processing happens locally on your device. Zero data transmission — no cloud, no risk.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                    <h3>Speaker Diarization</h3>
+                    <p>Automatically distinguishes PT from Patient in the transcript, enabling smarter SOAP note categorization.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </div>
+                <div>
+                    <h3>Copy to Clipboard</h3>
+                    <p>One-click copy of your completed SOAP note, ready to paste into any EHR or documentation system.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                </div>
+                <div>
+                    <h3>Works Offline</h3>
+                    <p>After initial model download, everything runs without an internet connection. Use it anywhere.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── CTA ─────────────────────────────────────────── -->
+<section class="cta-section" id="cta">
+    <div class="section-inner">
+        <div class="section-title">Get Early Access</div>
+        <p>Be among the first PTs to eliminate documentation burden. Sign up and we'll reach out when it's ready.</p>
+        <a href="https://forms.gle/PLACEHOLDER" target="_blank" class="btn btn-cta">Request Access</a>
+    </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────── -->
+<footer>
+    &copy; 2026 PT Intake. All processing happens locally on your device.
+</footer>
+
+<!-- ── JavaScript ──────────────────────────────────── -->
+<script>
+(function() {
+    "use strict";
+
+    // ── Interview Data (from docs/sample_interview.md) ──
+    const INTERVIEW = [
+        { speaker: "PT", text: "Alright Chris, so tell me what's been going on with your left wrist." },
+        { speaker: "Patient", text: "Yeah so I've been having pain in my left wrist for a few weeks now. It started after I was doing some heavy lifting at the gym. At first I thought I just tweaked it but it hasn't gone away. It's more of a dull aching feeling on the top of the wrist, kind of near the thumb side. Sometimes I get a sharp pain when I grip things or twist a doorknob. There's also some stiffness in the morning when I first wake up." },
+        { speaker: "PT", text: "Okay, and on a scale of zero to ten how would you rate the pain right now?" },
+        { speaker: "Patient", text: "Right now it's about a four out of ten. But when I try to grip something heavy it jumps to a six or seven. I was worried it might be a scapholunate tear because I looked it up online." },
+        { speaker: "PT", text: "I understand the concern. Let me take a look. I'm going to check your range of motion first. Go ahead and move your wrist into flexion for me. Okay and now extension. Good. Now radial deviation and ulnar deviation. Alright your range of motion is slightly limited in extension compared to the right side but overall not bad." },
+        { speaker: "PT", text: "Now I'm going to do some palpation. Let me press here on the dorsal side. Any tenderness there?" },
+        { speaker: "Patient", text: "Yeah that's tender right there." },
+        { speaker: "PT", text: "Okay I'm feeling some tenderness over the dorsal wrist but no significant swelling or edema. Let me check your grip strength. Squeeze my fingers as hard as you can. Okay and now the other hand. Your grip strength on the left is reduced compared to the right. I'd say about a four out of five on manual muscle testing." },
+        { speaker: "PT", text: "I'm going to do a Watson test to check for scapholunate instability. I'm pressing on the scaphoid while moving your wrist. Does that reproduce the pain?" },
+        { speaker: "Patient", text: "A little bit but not the sharp pain I get when gripping." },
+        { speaker: "PT", text: "Okay good. Based on my examination I don't think this is a scapholunate tear. The Watson test is not strongly positive. What I'm seeing is more likely a wrist strain with some general weakness and possible mild instability from deconditioning. I want to rule out any ligament damage but clinically this looks like it will respond well to conservative treatment." },
+        { speaker: "PT", text: "So here's what I recommend for the plan. We're going to start you on a home exercise program focused on wrist strengthening. I want you doing wrist curls and reverse wrist curls, 3 sets of 15 reps, using a light resistance band or a two pound weight. Also grip strengthening exercises with a stress ball, 3 sets of 20 squeezes. Do these exercises 2 times a day. Before the exercises do some gentle stretching, hold each stretch for 30 seconds. I also want to do some manual therapy today to work on the joint mobility. We'll reassess in two weeks to check your progress. I'd advise avoiding heavy gripping and lifting until the pain drops below a two out of ten. Any questions?" },
+        { speaker: "Patient", text: "No that makes sense. I'm glad it's not a tear." },
+        { speaker: "PT", text: "Yeah I think with consistent exercise and stretching you'll see good progress. Let's get started with the manual therapy." }
+    ];
+
+    // ── Keywords (from keyword_mapping.md) ──
+    const KEYWORDS = {
+        subjective: [
+            "pain", "aching", "sharp", "dull", "burning", "throbbing",
+            "stabbing", "stiffness", "reports", "states", "complains of"
+        ],
+        objective: [
+            "range of motion", "ROM", "flexion", "extension", "abduction",
+            "adduction", "rotation", "strength", "MMT", "muscle strength",
+            "tenderness", "palpation", "swelling", "edema", "ecchymosis",
+            "gait", "posture"
+        ],
+        assessment: [
+            "impingement", "tendinopathy", "strain", "sprain", "weakness",
+            "instability", "diagnosis", "rule out", "likely", "possible"
+        ],
+        plan: [
+            "home exercise program", "HEP", "exercises", "exercise",
+            "stretches", "stretching", "modalities", "manual therapy",
+            "patient education", "recommend", "advise", "progress",
+            "reassess", "3 sets", "30 seconds", "2 times a day"
+        ]
+    };
+
+    // Build sorted keyword list (longest first, like Python version)
+    const ALL_KEYWORDS = [];
+    for (const [section, words] of Object.entries(KEYWORDS)) {
+        for (const word of words) {
+            ALL_KEYWORDS.push({ keyword: word.toLowerCase(), section: section });
+        }
+    }
+    ALL_KEYWORDS.sort((a, b) => b.keyword.length - a.keyword.length);
+
+    const SPEAKER_DEFAULTS = { "Patient": "subjective", "PT": "objective" };
+
+    // ── Keyword Matcher (port of KeywordMatcher) ──
+    function matchSentence(sentence) {
+        const lower = sentence.toLowerCase();
+        for (const { keyword, section } of ALL_KEYWORDS) {
+            const regex = new RegExp("\\b" + keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+            if (regex.test(lower)) {
+                return section;
+            }
+        }
+        return "miscellaneous";
+    }
+
+    function categorizeWithSpeakers(segments) {
+        const result = { subjective: "", objective: "", assessment: "", plan: "", miscellaneous: "" };
+
+        for (const seg of segments) {
+            const text = seg.text.trim();
+            if (!text) continue;
+            const speaker = seg.speaker || "Unknown";
+
+            // Split into sentences
+            const sentences = text.split(/(?<=[.!?])\s+/);
+            for (let sentence of sentences) {
+                sentence = sentence.trim();
+                if (!sentence) continue;
+
+                let section = matchSentence(sentence);
+
+                // PT mentioning subjective keywords is asking, not reporting
+                if (speaker === "PT" && section === "subjective") {
+                    section = "objective";
+                }
+
+                // No keyword match — use speaker default
+                if (section === "miscellaneous") {
+                    section = SPEAKER_DEFAULTS[speaker] || "miscellaneous";
+                }
+
+                if (result[section]) result[section] += " ";
+                result[section] += sentence;
+            }
+        }
+        return result;
+    }
+
+    // ── SOAP Formatter (port of SOAPNote.format()) ──
+    function formatSOAP(sections) {
+        return (
+            "Subjective:\n\n" + (sections.subjective || "(none)") + "\n\n" +
+            "Objective:\n\n" + (sections.objective || "(none)") + "\n\n" +
+            "Assessment:\n\n" + (sections.assessment || "(none)") + "\n\n" +
+            "Plan:\n\n" + (sections.plan || "(none)")
+        );
+    }
+
+    // ── DOM refs ──
+    const btnStart = document.getElementById("btn-start-demo");
+    const transcriptPanel = document.getElementById("transcript-panel");
+    const soapPanel = document.getElementById("soap-panel");
+    const demoTimer = document.getElementById("demo-timer");
+    const timerValue = document.getElementById("timer-value");
+    const timeSaved = document.getElementById("time-saved");
+    const timeSavedSeconds = document.getElementById("time-saved-seconds");
+    const btnCopy = document.getElementById("btn-copy-soap");
+    const copyFeedback = document.getElementById("copy-feedback");
+
+    let demoRunning = false;
+    let timerInterval = null;
+    let seconds = 0;
+
+    // ── Timer ──
+    function startTimer() {
+        seconds = 0;
+        updateTimer();
+        demoTimer.style.display = "inline";
+        timerInterval = setInterval(function() {
+            seconds++;
+            updateTimer();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function updateTimer() {
+        const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const s = String(seconds % 60).padStart(2, "0");
+        timerValue.textContent = m + ":" + s;
+    }
+
+    // ── Playback ──
+    function splitIntoSentences(text) {
+        // Split on sentence boundaries but keep the delimiter
+        const parts = text.match(/[^.!?]+[.!?]+[\s]*/g);
+        if (!parts) return [text];
+        // Trim and filter empty
+        return parts.map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+    }
+
+    function buildPlaybackQueue() {
+        const queue = [];
+        for (const entry of INTERVIEW) {
+            const sentences = splitIntoSentences(entry.text);
+            for (let i = 0; i < sentences.length; i++) {
+                queue.push({
+                    speaker: entry.speaker,
+                    text: sentences[i],
+                    isFirst: i === 0,
+                    wordCount: sentences[i].split(/\s+/).length
+                });
+            }
+        }
+        return queue;
+    }
+
+    function delay(ms) {
+        return new Promise(function(resolve) { setTimeout(resolve, ms); });
+    }
+
+    async function runDemo() {
+        if (demoRunning) return;
+        demoRunning = true;
+
+        // Reset UI
+        btnStart.disabled = true;
+        btnStart.classList.add("running");
+        btnStart.innerHTML = '<span class="recording-dot"></span> Running Demo...';
+        transcriptPanel.innerHTML = "";
+        soapPanel.innerHTML = '<div class="transcript-placeholder">Generating after interview...</div>';
+        btnCopy.disabled = true;
+        timeSaved.classList.remove("visible");
+
+        startTimer();
+
+        const queue = buildPlaybackQueue();
+        const startTime = Date.now();
+
+        // We'll accumulate full segments for SOAP generation
+        let currentLineDiv = null;
+        let currentSpeaker = null;
+        let currentText = "";
+
+        const allSegments = [];
+
+        for (let i = 0; i < queue.length; i++) {
+            const item = queue[i];
+
+            // If new speaker or first sentence of a new entry, create new line
+            if (item.isFirst || item.speaker !== currentSpeaker) {
+                // Save previous segment
+                if (currentSpeaker !== null && currentText.trim()) {
+                    allSegments.push({ speaker: currentSpeaker, text: currentText.trim() });
+                }
+                currentSpeaker = item.speaker;
+                currentText = "";
+
+                currentLineDiv = document.createElement("div");
+                currentLineDiv.className = "diarized-line";
+
+                const label = document.createElement("span");
+                label.className = "speaker-label " + item.speaker.toLowerCase();
+                label.textContent = item.speaker + ": ";
+                currentLineDiv.appendChild(label);
+
+                transcriptPanel.appendChild(currentLineDiv);
+            }
+
+            // Append sentence text
+            currentText += (currentText ? " " : "") + item.text;
+            const textNode = document.createTextNode((currentLineDiv.childNodes.length > 1 ? " " : "") + item.text);
+            currentLineDiv.appendChild(textNode);
+
+            // Auto-scroll
+            transcriptPanel.scrollTop = transcriptPanel.scrollHeight;
+
+            // Proportional delay: ~60ms per word (simulates speaking speed)
+            const delayMs = Math.min(Math.max(item.wordCount * 60, 200), 2500);
+            await delay(delayMs);
+        }
+
+        // Save last segment
+        if (currentSpeaker !== null && currentText.trim()) {
+            allSegments.push({ speaker: currentSpeaker, text: currentText.trim() });
+        }
+
+        // Stop timer
+        stopTimer();
+        demoTimer.style.display = "none";
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+
+        // Generate SOAP note
+        const sections = categorizeWithSpeakers(allSegments);
+        const soapText = formatSOAP(sections);
+
+        soapPanel.innerHTML = "";
+        soapPanel.textContent = soapText;
+        soapPanel.scrollTop = 0;
+
+        // Show time-saved callout
+        timeSavedSeconds.textContent = "Generated in " + elapsed + " seconds";
+        timeSaved.classList.add("visible");
+
+        // Enable copy
+        btnCopy.disabled = false;
+
+        // Reset button
+        btnStart.disabled = false;
+        btnStart.classList.remove("running");
+        btnStart.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: -2px; margin-right: 6px;"><polygon points="5 3 19 12 5 21 5 3"/></svg> Restart Demo';
+
+        demoRunning = false;
+    }
+
+    btnStart.addEventListener("click", runDemo);
+
+    // ── Copy ──
+    btnCopy.addEventListener("click", function() {
+        const text = soapPanel.textContent;
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(function() {
+            copyFeedback.classList.add("show");
+            setTimeout(function() { copyFeedback.classList.remove("show"); }, 2000);
+        }).catch(function() {
+            // Fallback
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            copyFeedback.classList.add("show");
+            setTimeout(function() { copyFeedback.classList.remove("show"); }, 2000);
+        });
+    });
+
+})();
+</script>
+</body>
+</html>
