@@ -599,15 +599,107 @@
             margin: 0 auto 28px;
         }
 
+        .cta-form {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .cta-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .cta-form input,
+        .cta-form select {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .cta-form input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .cta-form input:focus,
+        .cta-form select:focus {
+            border-color: white;
+        }
+
+        .cta-form select {
+            cursor: pointer;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .cta-form select.selected {
+            color: white;
+        }
+
+        .cta-form select option {
+            color: var(--gray-800);
+            background: white;
+        }
+
         .btn-cta {
             background: white;
             color: var(--blue);
             font-size: 16px;
             padding: 14px 36px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
         .btn-cta:hover {
             background: var(--gray-100);
+        }
+
+        .btn-cta:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .cta-success {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .cta-success.visible {
+            display: block;
+        }
+
+        .cta-success .checkmark {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .cta-success h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .cta-success p {
+            color: rgba(255,255,255,0.85);
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .cta-row {
+                flex-direction: column;
+            }
         }
 
         /* ── Footer ─────────────────────────────────── */
@@ -872,7 +964,30 @@
     <div class="section-inner">
         <div class="section-title">Get Early Access</div>
         <p>Be among the first PTs to eliminate documentation burden. Sign up and we'll reach out when it's ready.</p>
-        <a href="https://forms.gle/MwxVAVFpSH67ZkaG6" target="_blank" class="btn btn-cta">Request Access</a>
+
+        <form class="cta-form" id="cta-form">
+            <div class="cta-row">
+                <input type="text" id="cta-name" placeholder="Name *" required>
+                <input type="email" id="cta-email" placeholder="Email *" required>
+            </div>
+            <div class="cta-row">
+                <input type="text" id="cta-clinic" placeholder="Clinic / Practice Name">
+                <select id="cta-patients">
+                    <option value="" disabled selected>Patients per day?</option>
+                    <option value="1-5">1-5</option>
+                    <option value="6-10">6-10</option>
+                    <option value="11-20">11-20</option>
+                    <option value="20+">20+</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-cta" id="btn-cta">Request Access</button>
+        </form>
+
+        <div class="cta-success" id="cta-success">
+            <div class="checkmark">&#10003;</div>
+            <h3>You're on the list!</h3>
+            <p>We'll reach out when PT Intake is ready for early access.</p>
+        </div>
     </div>
 </section>
 
@@ -1173,6 +1288,49 @@
             document.body.removeChild(ta);
             copyFeedback.classList.add("show");
             setTimeout(function() { copyFeedback.classList.remove("show"); }, 2000);
+        });
+    });
+
+    // ── CTA Form ──
+    var ctaForm = document.getElementById("cta-form");
+    var ctaSuccess = document.getElementById("cta-success");
+    var ctaPatients = document.getElementById("cta-patients");
+
+    ctaPatients.addEventListener("change", function() {
+        ctaPatients.classList.add("selected");
+    });
+
+    ctaForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        var name = document.getElementById("cta-name").value.trim();
+        var email = document.getElementById("cta-email").value.trim();
+        var clinic = document.getElementById("cta-clinic").value.trim();
+        var patients = ctaPatients.value;
+
+        var btnSubmit = document.getElementById("btn-cta");
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = "Submitting...";
+
+        var formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSd9BVnn8Ly38bEHd6-Y6lBfV1yaRK00bo2uNQX2GiAQZKdajA/formResponse";
+        var params = new URLSearchParams();
+        params.append("entry.1633920210", name);
+        params.append("entry.227649005", email);
+        if (clinic) params.append("entry.790080973", clinic);
+        if (patients) params.append("entry.1770822543", patients);
+
+        fetch(formUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString()
+        }).then(function() {
+            ctaForm.style.display = "none";
+            ctaSuccess.classList.add("visible");
+        }).catch(function() {
+            // no-cors means we can't read the response, but it still submits
+            ctaForm.style.display = "none";
+            ctaSuccess.classList.add("visible");
         });
     });
 
