@@ -681,6 +681,43 @@
             opacity: 1;
         }
 
+        .btn-copy-section {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px;
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-copy-section svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: var(--gray-500);
+            stroke-width: 2;
+            transition: stroke 0.2s;
+        }
+
+        .btn-copy-section:hover svg {
+            stroke: var(--blue);
+        }
+
+        .btn-copy-section.copied svg {
+            stroke: var(--green);
+        }
+
+        .btn-copy-section:disabled {
+            cursor: not-allowed;
+        }
+
+        .soap-section:hover .btn-copy-section {
+            opacity: 1;
+        }
+
         /* ── Features ───────────────────────────────── */
         .features-grid {
             display: grid;
@@ -1393,6 +1430,12 @@
                 '<div class="soap-section-header">' +
                     '<span class="soap-badge">' + sec.badge + '</span>' +
                     '<span class="soap-section-title">' + sec.label + '</span>' +
+                    '<button class="btn-copy-section" disabled title="Copy ' + sec.label + '">' +
+                        '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">' +
+                            '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                            '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                        '</svg>' +
+                    '</button>' +
                 '</div>';
             var contentDiv = document.createElement("div");
             contentDiv.className = "soap-section-content";
@@ -1481,6 +1524,9 @@
             contentDiv.classList.add("polished");
             var polished = POLISHED_SOAP[key] || "";
             contentDiv.innerHTML = polished.replace(/\n/g, "<br>");
+            // Enable the section copy button if content is non-empty
+            var sectionBtn = contentDiv.parentElement.querySelector(".btn-copy-section");
+            if (sectionBtn && polished.trim()) sectionBtn.disabled = false;
         }
 
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
@@ -1532,6 +1578,31 @@
             document.body.removeChild(ta);
             copyFeedback.classList.add("show");
             setTimeout(function() { copyFeedback.classList.remove("show"); }, 2000);
+        });
+    });
+
+    // ── Section Copy ──
+    soapPanel.addEventListener("click", function(e) {
+        var btn = e.target.closest(".btn-copy-section");
+        if (!btn || btn.disabled) return;
+        var section = btn.closest(".soap-section");
+        var content = section.querySelector(".soap-section-content");
+        var text = content ? content.innerText.trim() : "";
+        if (!text) return;
+
+        function showCopied() {
+            btn.classList.add("copied");
+            setTimeout(function() { btn.classList.remove("copied"); }, 1500);
+        }
+
+        navigator.clipboard.writeText(text).then(showCopied).catch(function() {
+            var ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            document.body.removeChild(ta);
+            showCopied();
         });
     });
 
