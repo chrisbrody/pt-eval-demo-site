@@ -543,6 +543,29 @@
             color: var(--pink);
         }
 
+        .kw-highlight {
+            font-weight: 600;
+            border-radius: 3px;
+            padding: 1px 3px;
+            margin: 0 1px;
+        }
+        .kw-subjective {
+            background: rgba(66, 153, 225, 0.15);
+            color: #2b6cb0;
+        }
+        .kw-objective {
+            background: rgba(56, 161, 105, 0.15);
+            color: #276749;
+        }
+        .kw-assessment {
+            background: rgba(237, 137, 54, 0.15);
+            color: #c05621;
+        }
+        .kw-plan {
+            background: rgba(128, 90, 213, 0.15);
+            color: #6b46c1;
+        }
+
         .recording-dot {
             display: inline-block;
             width: 8px;
@@ -1163,6 +1186,25 @@
         return "miscellaneous";
     }
 
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function highlightKeywords(text) {
+        const lower = text.toLowerCase();
+        for (const { keyword, section } of ALL_KEYWORDS) {
+            const regex = new RegExp("\\b" + keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+            const match = regex.exec(lower);
+            if (match) {
+                const before = escapeHtml(text.slice(0, match.index));
+                const matched = escapeHtml(text.slice(match.index, match.index + match[0].length));
+                const after = escapeHtml(text.slice(match.index + match[0].length));
+                return before + '<span class="kw-highlight kw-' + section + '">' + matched + '</span>' + after;
+            }
+        }
+        return escapeHtml(text);
+    }
+
     function categorizeWithSpeakers(segments) {
         const result = { subjective: "", objective: "", assessment: "", plan: "", miscellaneous: "" };
 
@@ -1346,9 +1388,10 @@
                 transcriptPanel.appendChild(currentLineDiv);
             }
 
-            // Append sentence text
-            const textNode = document.createTextNode((currentLineDiv.childNodes.length > 1 ? " " : "") + item.text);
-            currentLineDiv.appendChild(textNode);
+            // Append sentence text with keyword highlights
+            const textSpan = document.createElement("span");
+            textSpan.innerHTML = (currentLineDiv.childNodes.length > 1 ? " " : "") + highlightKeywords(item.text);
+            currentLineDiv.appendChild(textSpan);
 
             // Auto-scroll transcript (only if user hasn't scrolled up)
             autoScroll(transcriptPanel);
