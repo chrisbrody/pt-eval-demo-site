@@ -1413,7 +1413,7 @@
             }
 
             // Proportional delay: ~60ms per word (simulates speaking speed)
-            const delayMs = Math.min(Math.max(item.wordCount * 60, 200), 2500);
+            const delayMs = Math.min(Math.max(item.wordCount * 35, 200), 1400);
             await delay(delayMs);
         }
 
