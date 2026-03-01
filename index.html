@@ -411,7 +411,6 @@
         .demo-panel-body {
             padding: 16px;
             min-height: 300px;
-            max-height: 420px;
             overflow-y: auto;
             flex: 1;
         }
@@ -426,7 +425,98 @@
             font-size: 14px;
             line-height: 1.6;
             color: var(--gray-800);
-            white-space: pre-wrap;
+            padding: 12px;
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        .soap-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .soap-section {
+            border-left: 4px solid var(--gray-300);
+            border-radius: 4px;
+            background: var(--gray-50);
+            padding: 10px 12px;
+        }
+
+        .soap-section[data-section="subjective"] { border-left-color: #2b6cb0; }
+        .soap-section[data-section="objective"]   { border-left-color: #38a169; }
+        .soap-section[data-section="assessment"]  { border-left-color: #dd6b20; }
+        .soap-section[data-section="plan"]        { border-left-color: #805ad5; }
+
+        .soap-section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .soap-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .soap-section[data-section="subjective"] .soap-badge { background: #2b6cb0; }
+        .soap-section[data-section="objective"]   .soap-badge { background: #38a169; }
+        .soap-section[data-section="assessment"]  .soap-badge { background: #dd6b20; }
+        .soap-section[data-section="plan"]        .soap-badge { background: #805ad5; }
+
+        .soap-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .soap-section-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--gray-700);
+        }
+
+        .soap-section-content:empty::after {
+            content: "Waiting...";
+            font-style: italic;
+            color: var(--gray-400);
+        }
+
+        .soap-section-content.processing {
+            color: var(--gray-400);
+            font-style: italic;
+        }
+
+        .soap-section-content.polished {
+            color: var(--gray-800);
+            font-style: normal;
+        }
+
+        .soap-processing-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--gray-300);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         .transcript-placeholder {
@@ -753,7 +843,6 @@
 
             .demo-panel-body {
                 min-height: 200px;
-                max-height: 320px;
             }
         }
     </style>
@@ -1054,6 +1143,14 @@
 
     const SPEAKER_DEFAULTS = { "Patient": "subjective", "PT": "objective" };
 
+    // ── Polished SOAP text (AI-refined clinical language) ──
+    const POLISHED_SOAP = {
+        subjective: "Patient reports left wrist pain for several weeks following heavy lifting at the gym. Describes a dull aching sensation on the dorsal/radial aspect of the wrist with sharp pain on gripping and twisting motions. Morning stiffness noted. Current pain rated 4/10 at rest, increasing to 6-7/10 with gripping activities. Patient expresses concern about possible scapholunate tear. Tenderness confirmed on palpation of the dorsal wrist. Reports mild discomfort with Watson test but not the sharp pain experienced with gripping.",
+        objective: "ROM: Slightly limited wrist extension on L compared to R; flexion, radial deviation, and ulnar deviation within functional limits. Palpation: Tenderness over dorsal wrist; no significant swelling or edema noted. Grip strength: Reduced on L compared to R. MMT: 4/5 grip strength on L. Special tests: Watson test not strongly positive for scapholunate instability.",
+        assessment: "Clinical presentation consistent with left wrist strain with associated weakness and possible mild instability secondary to deconditioning. Scapholunate tear less likely given negative Watson test. Condition expected to respond well to conservative treatment. Will monitor for ligament involvement.",
+        plan: "1. HEP: Wrist curls and reverse wrist curls — 3 sets x 15 reps with light resistance band or 2 lb weight, 2x/day.\n2. Grip strengthening with stress ball — 3 sets x 20 squeezes, 2x/day.\n3. Gentle wrist stretching — hold 30 seconds each, prior to exercises.\n4. Manual therapy this session to address joint mobility.\n5. Reassess in 2 weeks.\n6. Avoid heavy gripping/lifting until pain < 2/10."
+    };
+
     // ── Keyword Matcher (port of KeywordMatcher) ──
     function matchSentence(sentence) {
         const lower = sentence.toLowerCase();
@@ -1174,6 +1271,14 @@
         return new Promise(function(resolve) { setTimeout(resolve, ms); });
     }
 
+    // Only auto-scroll if user is already near the bottom (within 40px)
+    function autoScroll(el) {
+        var atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+        if (atBottom) {
+            el.scrollTop = el.scrollHeight;
+        }
+    }
+
     async function runDemo() {
         if (demoRunning) return;
         demoRunning = true;
@@ -1183,33 +1288,52 @@
         btnStart.classList.add("running");
         btnStart.innerHTML = '<span class="recording-dot"></span> Running Demo...';
         transcriptPanel.innerHTML = "";
-        soapPanel.innerHTML = '<div class="transcript-placeholder">Generating after interview...</div>';
         btnCopy.disabled = true;
         timeSaved.classList.remove("visible");
+
+        // Build SOAP section containers
+        var soapSections = [
+            { key: "subjective", label: "Subjective", badge: "S" },
+            { key: "objective",  label: "Objective",  badge: "O" },
+            { key: "assessment", label: "Assessment", badge: "A" },
+            { key: "plan",       label: "Plan",       badge: "P" }
+        ];
+        soapPanel.innerHTML = "";
+        var soapContainer = document.createElement("div");
+        soapContainer.className = "soap-sections";
+        var soapContentDivs = {};
+        for (var si = 0; si < soapSections.length; si++) {
+            var sec = soapSections[si];
+            var sectionDiv = document.createElement("div");
+            sectionDiv.className = "soap-section";
+            sectionDiv.setAttribute("data-section", sec.key);
+            sectionDiv.innerHTML =
+                '<div class="soap-section-header">' +
+                    '<span class="soap-badge">' + sec.badge + '</span>' +
+                    '<span class="soap-section-title">' + sec.label + '</span>' +
+                '</div>';
+            var contentDiv = document.createElement("div");
+            contentDiv.className = "soap-section-content";
+            sectionDiv.appendChild(contentDiv);
+            soapContainer.appendChild(sectionDiv);
+            soapContentDivs[sec.key] = contentDiv;
+        }
+        soapPanel.appendChild(soapContainer);
 
         startTimer();
 
         const queue = buildPlaybackQueue();
         const startTime = Date.now();
 
-        // We'll accumulate full segments for SOAP generation
         let currentLineDiv = null;
         let currentSpeaker = null;
-        let currentText = "";
-
-        const allSegments = [];
 
         for (let i = 0; i < queue.length; i++) {
             const item = queue[i];
 
             // If new speaker or first sentence of a new entry, create new line
             if (item.isFirst || item.speaker !== currentSpeaker) {
-                // Save previous segment
-                if (currentSpeaker !== null && currentText.trim()) {
-                    allSegments.push({ speaker: currentSpeaker, text: currentText.trim() });
-                }
                 currentSpeaker = item.speaker;
-                currentText = "";
 
                 currentLineDiv = document.createElement("div");
                 currentLineDiv.className = "diarized-line";
@@ -1223,36 +1347,57 @@
             }
 
             // Append sentence text
-            currentText += (currentText ? " " : "") + item.text;
             const textNode = document.createTextNode((currentLineDiv.childNodes.length > 1 ? " " : "") + item.text);
             currentLineDiv.appendChild(textNode);
 
-            // Auto-scroll
-            transcriptPanel.scrollTop = transcriptPanel.scrollHeight;
+            // Auto-scroll transcript (only if user hasn't scrolled up)
+            autoScroll(transcriptPanel);
+
+            // Categorize sentence and append to SOAP section
+            var soapSection = matchSentence(item.text);
+            if (item.speaker === "PT" && soapSection === "subjective") {
+                soapSection = "objective";
+            }
+            if (soapSection === "miscellaneous") {
+                soapSection = SPEAKER_DEFAULTS[item.speaker] || "subjective";
+            }
+            var targetDiv = soapContentDivs[soapSection];
+            if (targetDiv) {
+                if (targetDiv.textContent) {
+                    targetDiv.appendChild(document.createTextNode(" "));
+                }
+                targetDiv.appendChild(document.createTextNode(item.text));
+            }
 
             // Proportional delay: ~60ms per word (simulates speaking speed)
             const delayMs = Math.min(Math.max(item.wordCount * 60, 200), 2500);
             await delay(delayMs);
         }
 
-        // Save last segment
-        if (currentSpeaker !== null && currentText.trim()) {
-            allSegments.push({ speaker: currentSpeaker, text: currentText.trim() });
-        }
-
         // Stop timer
         stopTimer();
         demoTimer.style.display = "none";
 
+        // ── AI Refinement pass: section by section ──
+        var sectionOrder = ["subjective", "objective", "assessment", "plan"];
+        for (var ri = 0; ri < sectionOrder.length; ri++) {
+            var key = sectionOrder[ri];
+            var contentDiv = soapContentDivs[key];
+            if (!contentDiv) continue;
+
+            // Show processing state
+            contentDiv.classList.add("processing");
+            contentDiv.innerHTML = '<span class="soap-processing-spinner"></span> Analyzing...';
+            await delay(600 + Math.random() * 400);
+
+            // Replace with polished text
+            contentDiv.classList.remove("processing");
+            contentDiv.classList.add("polished");
+            var polished = POLISHED_SOAP[key] || "";
+            contentDiv.innerHTML = polished.replace(/\n/g, "<br>");
+        }
+
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
-
-        // Generate SOAP note
-        const sections = categorizeWithSpeakers(allSegments);
-        const soapText = formatSOAP(sections);
-
-        soapPanel.innerHTML = "";
-        soapPanel.textContent = soapText;
-        soapPanel.scrollTop = 0;
 
         // Show time-saved callout
         timeSavedSeconds.textContent = "Generated in " + elapsed + " seconds";
@@ -1272,15 +1417,28 @@
     btnStart.addEventListener("click", runDemo);
 
     // ── Copy ──
+    function buildSOAPText() {
+        var sections = soapPanel.querySelectorAll(".soap-section");
+        var parts = [];
+        sections.forEach(function(sec) {
+            var title = sec.querySelector(".soap-section-title");
+            var content = sec.querySelector(".soap-section-content");
+            if (title && content) {
+                parts.push(title.textContent + ":\n\n" + (content.innerText.trim() || "(none)"));
+            }
+        });
+        return parts.join("\n\n");
+    }
+
     btnCopy.addEventListener("click", function() {
-        const text = soapPanel.textContent;
+        var text = buildSOAPText();
         if (!text) return;
         navigator.clipboard.writeText(text).then(function() {
             copyFeedback.classList.add("show");
             setTimeout(function() { copyFeedback.classList.remove("show"); }, 2000);
         }).catch(function() {
             // Fallback
-            const ta = document.createElement("textarea");
+            var ta = document.createElement("textarea");
             ta.value = text;
             document.body.appendChild(ta);
             ta.select();
