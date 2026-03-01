@@ -594,6 +594,33 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .waveform {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            height: 14px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .waveform-bar {
+            width: 3px;
+            background: var(--red);
+            border-radius: 2px;
+            animation: waveformPulse 0.6s ease-in-out infinite alternate;
+        }
+
+        .waveform-bar:nth-child(1) { height: 40%; animation-delay: 0s; }
+        .waveform-bar:nth-child(2) { height: 70%; animation-delay: 0.15s; }
+        .waveform-bar:nth-child(3) { height: 100%; animation-delay: 0.3s; }
+        .waveform-bar:nth-child(4) { height: 60%; animation-delay: 0.45s; }
+        .waveform-bar:nth-child(5) { height: 85%; animation-delay: 0.1s; }
+
+        @keyframes waveformPulse {
+            0% { transform: scaleY(0.3); }
+            100% { transform: scaleY(1); }
+        }
+
         .time-saved-callout {
             display: none;
             text-align: center;
@@ -1003,6 +1030,13 @@
                     <span class="timer-badge" id="demo-timer" style="display:none;">
                         <span class="recording-dot"></span>
                         <span id="timer-value">00:00</span>
+                        <span class="waveform">
+                            <span class="waveform-bar"></span>
+                            <span class="waveform-bar"></span>
+                            <span class="waveform-bar"></span>
+                            <span class="waveform-bar"></span>
+                            <span class="waveform-bar"></span>
+                        </span>
                     </span>
                 </div>
                 <div class="demo-panel-body transcript" id="transcript-panel">
